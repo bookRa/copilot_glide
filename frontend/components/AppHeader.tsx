@@ -4,8 +4,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { NextComponentType } from "next";
 
 const AppHeader: NextComponentType = () => (
-	<>
-		<div className="grid grid-cols-3 text-7xl font-bold">
+	< >
+		<div className=" border border-blue-600 grid grid-cols-3 text-7xl font-bold">
 			<div className="">
 				<span className="float-right py-4">🖼️</span>
 			</div>
