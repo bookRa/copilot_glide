@@ -1,2 +1,5 @@
 # this file contains multiple GB+ size models
 glide_model_cache/
+
+__pycache__/    # Python cache files
+**_cache/
