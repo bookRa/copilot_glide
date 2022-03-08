@@ -1,5 +1,5 @@
 import { NextComponentType } from "next";
-import { useState } from "react";
+import React, { useState } from "react";
 import UpsampleForm from "./UpsampleForm";
 
 enum PromptSubmissionStatus {
@@ -10,23 +10,41 @@ enum PromptSubmissionStatus {
 }
 
 const PromptForm: NextComponentType = () => {
-	// return (
-	//             <li>
-	//                 <p className="text-lg">3. Select any of the initial creation thumbnails to upsample (get higher-quality/larger images)</p>
-	//                 <em>If you don't like any of the thumbnails, change your Prompt or hit Re-Submit </em>
-	//             </li>
-	//             <li>
-	//                 <p className="text-lg">4. <a href="https://">Share</a> your favorite creations</p>
-	//                 <em>Assuming I make it this far 😛</em>
-	//             </li>
-	//         </ol>
-	//         <div></div>
-
-	//     </div >
-	// )
-	const [promptStatus, setPromptStatus] = useState<PromptSubmissionStatus>(
+	const [submissionStatus, setSubmissionStatus] = useState<PromptSubmissionStatus>(
 		PromptSubmissionStatus.NOT_SUBMITTED
 	);
+
+	const [submissionVariations, setSubmissionVariations] = useState<number>(3);
+	const [submissionPrompt, setSubmissionPrompt] = useState<string>("");
+
+	const handleSubmissionChange = (event: React.FormEvent) => {
+		let target = event.target as HTMLInputElement;
+		console.log(target);
+		if (target.name == "prompt") {
+			setSubmissionPrompt(target.value);
+		} else if (target.name == "variations") {
+			let numTarget = parseInt(target.value);
+			// TODO: allow user to backspace and input number without losing input
+			if (isNaN(numTarget) || numTarget < 1 || numTarget > 5) {
+				return;
+			}
+			setSubmissionVariations(numTarget);
+		}
+	};
+	const handleSubmit = async (event: React.FormEvent) => {
+		event.preventDefault();
+		setSubmissionStatus(PromptSubmissionStatus.SUBMITTING);
+		const response = await fetch("/api/airtist", {
+			method: "POST",
+			body: JSON.stringify({
+				prompt: submissionPrompt,
+				variations: submissionVariations,
+			}),
+			headers: {
+				"Content-Type": "application/json",
+			},
+		});
+	};
 
 	return (
 		<form action="" className="self-center w-10/12 border border-purple-500">
@@ -43,8 +61,10 @@ const PromptForm: NextComponentType = () => {
 						required
 						type="text"
 						className="appearance-none block w-full bg-gray-200 text-gray-700
-						 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
+						 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white invalid:border-red-500"
 						name="prompt"
+						value={submissionPrompt}
+						onChange={handleSubmissionChange}
 						placeholder="A dog with a birthday hat"
 					/>
 					<p className="text-gray-500 text-xs italic">
@@ -64,7 +84,8 @@ const PromptForm: NextComponentType = () => {
 						type="number"
 						name="variations"
 						id="promptvariations"
-						defaultValue={3}
+						value={submissionVariations}
+						onChange={handleSubmissionChange}
 						min={1}
 						max={5}
 						className="appearance-none block w-full bg-gray-200 text-gray-700
@@ -84,7 +105,7 @@ const PromptForm: NextComponentType = () => {
 						{[
 							PromptSubmissionStatus.GOOD_SUBMISSION,
 							PromptSubmissionStatus.ERROR_SUBMISSION,
-						].includes(promptStatus)
+						].includes(submissionStatus)
 							? "Re-"
 							: ""}
 						Submit Prompt!
@@ -93,24 +114,32 @@ const PromptForm: NextComponentType = () => {
 						name="prompt-submit"
 						type="submit"
 						className="w-full bg-green-500 hover:bg-green-400 text-white font-bold py-2 px-4 border-b-4 border-green-700 hover:border-green-500 rounded"
-						onClick={async (e) => {
-							e.preventDefault();
-							let response = await fetch("/api/airtist");
-							let foo = await response.json();
-							console.log(foo);
-							// fetch("/api/hello").then((res) => {
-							// 	let foo = res.text();
-							// 	console.log("received response", foo);
-							// });
-							setPromptStatus(PromptSubmissionStatus.GOOD_SUBMISSION);
-						}}
+						onClick={handleSubmit}
 						value="🤖👨‍🎨🚀"
 					/>
 				</div>
 			</div>
-			<UpsampleForm variations={5} submissions={false}></UpsampleForm>
+			<UpsampleForm
+				variations={submissionVariations}
+				submissions={false}
+			></UpsampleForm>
 		</form>
 	);
 };
 
 export default PromptForm;
+
+// return (
+//             <li>
+//                 <p className="text-lg">3. Select any of the initial creation thumbnails to upsample (get higher-quality/larger images)</p>
+//                 <em>If you don't like any of the thumbnails, change your Prompt or hit Re-Submit </em>
+//             </li>
+//             <li>
+//                 <p className="text-lg">4. <a href="https://">Share</a> your favorite creations</p>
+//                 <em>Assuming I make it this far 😛</em>
+//             </li>
+//         </ol>
+//         <div></div>
+
+//     </div >
+// )
